@@ -1,0 +1,18 @@
+@keyframes spinX {
+    0% {
+      transform: rotateY(0deg);
+    }
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+  
+  
+  .fallback-icon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    animation: spinX 1.4s linear infinite;
+    transform-origin: center;
+  }
+  

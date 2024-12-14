@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.ant-form-item-required {
+  @apply font-semibold;
+}
+
+.ant-input-password-icon {
+  color: #9b9b9b !important;
+}
+
+.ant-table-cell{
+  background-color: white !important;
+}
+.ant-table-cell::before{
+  display: none;
+}
+
+.ant-upload-select{
+  width: 100%;
+}
