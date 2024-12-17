@@ -21,7 +21,7 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
   const [form] = Form.useForm();
 
   // get the file to form values
-  const normFile = (e: UploadChangeParam):UploadFile[] => {
+  const normFile = (e: UploadChangeParam): UploadFile[] => {
     if (Array.isArray(e)) {
       return e;
     }
@@ -29,7 +29,7 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
   };
 
   // check if the file .docx
-  const beforeUpload = (file: File):boolean | string => {
+  const beforeUpload = (file: File): boolean | string => {
     const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     if (!isDocx) {
       Notification("error", "Faqat .docx formatdagi fayllarni yuklashingiz mumkin!");
@@ -77,6 +77,7 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
   // handle form submit start
   const handleSubmit = async (values: CreateContractsType) => {
     try {
+      store.setLoading(true);
       let attachmentData = data?.attachment;
       // file upload if the yes or catch the Notification
       if (values.attachment && values.attachment[0].originFileObj) {
@@ -116,12 +117,14 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
       }
     } catch {
       Notification("error", "Fayl yuklashda xatolik");
+    } finally {
+      store.setLoading(false);
     }
   };
   // handle form submit end
 
   // handle modal cancel
-  const handleCancelModal = ():void => {
+  const handleCancelModal = (): void => {
     setOpenModal(false);
     setData(null);
     form.resetFields();
@@ -181,6 +184,7 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
             <Button
               size="large"
               type="dashed"
+              htmlType="button"
               icon={<FileAddOutlined />}
               className="!text-[#00C2A8] hover:!border-[#0EB182] w-full"
             >
@@ -200,6 +204,7 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
               Bekor qilish
             </Button>
             <Button
+              loading={store.loading}
               type="primary"
               className="!bg-[#0EB182] hover:!bg-[#0EB182]/80"
               htmlType="submit"
