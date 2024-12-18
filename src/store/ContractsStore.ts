@@ -1,29 +1,97 @@
 import { makeAutoObservable } from "mobx";
-import { ContractType } from "../types";
+import { ContractType, CourseType, PaginationType, ResponseDataType } from "../types";
+import { useCreateContracts, useEditContracts, useGetContracts, useGetCourses, useUploadFileAttachment } from "../hooks/useContracts";
+import Notification from "../utils/Notification";
+import { UploadFile } from "antd";
 
 export class ContractsStore {
-  contracts: ContractType[] = [];
-  pagination = {
-    current: 1,
-    pageSize: 10,
+  data: ResponseDataType = {
+    contracts: [],
     total: 0,
   };
-  loading: boolean = false;
+  pagination: PaginationType = {
+    current: 1,
+    pageSize: 10,
+  };
+  courses: CourseType[] = [];
+  editData: ContractType | null = null;
   searchValue: string = "";
-  refresh: boolean = false;
+  loading: boolean = false;
+  openModal: boolean = false;
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  setContracts(contracts: ContractType[]) {
-    this.contracts = contracts;
+  async getContracts(search?: string) {
+    try {
+      this.setLoading(true);
+      const res = await useGetContracts({
+        page: this.pagination.current,
+        perPage: this.pagination.pageSize,
+        search: search,
+      });
+      this.setData(res.data);
+    } catch {
+      console.error("Error fetching contracts");
+    } finally {
+      this.setLoading(false);
+    }
   }
-  setPagination(pagination: {
-    current: number;
-    pageSize: number;
-    total: number;
-  }) {
+
+  async getCourses() {
+    try {
+      const courses = await useGetCourses();
+      this.setCourses(courses);
+    } catch (error) {
+      console.error("Error fetching courses", error);
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  async uploadFile(file: UploadFile) {
+    try {
+      const res = await useUploadFileAttachment(file);
+      if (res.success) {
+        return {
+          size: res.data[0].size,
+          origName: res.data[0].fileName,
+          url: res.data[0].path,
+        };
+      } else {
+        Notification("error", "Fayl yuklashda xatolik");
+        return null;
+      }
+    } catch (error) {
+      Notification("error", "Fayl yuklashda xatolik");
+      return null;
+    }
+  }
+
+  async addorEditContract(contractData: ContractType, contractId?: number): Promise<void> {
+    try {
+      let res;
+      if (contractId) {
+        res = await useEditContracts(contractId, contractData);
+      } else {
+        res = await useCreateContracts(contractData);
+      }
+
+      if (res.success) {
+        this.getContracts();
+        Notification("success", contractId ? "Shartnoma yangilandi" : "Shartnoma qo'shildi");
+      }
+    } catch (error) {
+      Notification("error", "Xatolik yuz berdi");
+    }
+  }
+
+  setData(data: ResponseDataType) {
+    this.data = data;
+  }
+
+  setPagination(pagination: PaginationType) {
     this.pagination = pagination;
   }
 
@@ -35,9 +103,18 @@ export class ContractsStore {
     this.searchValue = searchValue;
   }
 
-  setRefresh(refresh: boolean) {
-    this.refresh = refresh;
+  setEditData(editData: ContractType | null) {
+    this.editData = editData;
   }
+
+  setOpenModal(openModal: boolean) {
+    this.openModal = openModal;
+  }
+
+  setCourses(courses: CourseType[]) {
+    this.courses = courses;
+  }
+
 }
 
 const store = new ContractsStore();

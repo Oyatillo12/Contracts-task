@@ -21,10 +21,11 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="flex items-start gap-x-[80px]">
       <img
-        className="object-cover h-[100vh] w-[600px]"
+        className="h-screen w-[50%] object-cover "
         src="/login-img.png"
         alt="Najot ta'lim img"
       />
@@ -62,6 +63,7 @@ const Login = () => {
           </Form.Item>
           <Form.Item label={null}>
             <Button
+              size="large"
               loading={isLoading}
               className="!bg-[#0EB182] w-full hover:!bg-[#0EB182]/80"
               type="primary"

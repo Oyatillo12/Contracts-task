@@ -1,34 +1,42 @@
-import { Button, Form, Input, Modal, Select, Space, Upload } from "antd";
-import React, { SetStateAction, useEffect } from "react";
+import { Button, ButtonProps, Form, Input, Modal, Select, Upload } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
 import { FileAddOutlined } from "../assets/images/icon";
 import { ContractType, CourseType, CreateContractsType, } from "../types";
-import { useCreateContracts, useEditContracts, useGetCourses, useUploadFileAttachment } from "../hooks/useContracts";
 import Notification from "../utils/Notification";
 import store from "../store/ContractsStore";
-import courseStore from "../store/CoursesStore";
 import { observer } from "mobx-react";
-import axios from "axios";
 import { UploadChangeParam, UploadFile } from "antd/es/upload";
 
-interface ModalType {
-  openModal: boolean;
-  setOpenModal: React.Dispatch<SetStateAction<boolean>>;
-  data?: ContractType;
-  setData: React.Dispatch<SetStateAction<ContractType | null>>;
-}
-
-const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setData }) => {
+const CustomModal: React.FC = () => {
   const [form] = Form.useForm();
+  const [file, setFile] = useState<UploadFile | null>(null);
+  const submitBtnProps: ButtonProps = {
+    htmlType: "submit",
+    className: "!bg-[#0EB182] hover:!bg-[#0EB182]/80"
+  }
+  const cancelBtnProps: ButtonProps = {
+    type: "default",
+    htmlType: "reset",
+    className: "!text-[#0EB182] hover:!border-[#0EB182]/80"
+  }
 
-  // get the file to form values
-  const normFile = (e: UploadChangeParam): UploadFile[] => {
+  const courses = useMemo(() => {
+    return store.courses.map((course: CourseType) => ({ label: course.name, value: course.id }));
+  }, []);
+
+  const normFile = (e: UploadChangeParam) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
-  };
+    return e.fileList;
+  }
 
-  // check if the file .docx
+  const handleUploadChange = (e: UploadChangeParam) => {
+    if (e.file) {
+      setFile(e.file);
+    }
+  }
+
   const beforeUpload = (file: File): boolean | string => {
     const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     if (!isDocx) {
@@ -38,104 +46,71 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
     return false;
   };
 
-  // get the courses start
+  const handleCancelModal = (): void => {
+    store.setOpenModal(false);
+    store.setEditData(null);
+    form.resetFields();
+  };
+
   useEffect(() => {
-    async function fetchData() {
-      const contracts = await useGetCourses();
-      courseStore.setCourses(contracts);
+    if (store.editData) {
+      form.setFieldsValue({
+        courseId: store.editData.course?.id,
+        title: store.editData.title,
+        attachment: store.editData.attachment
+          ? [
+            {
+              uid: "-1",
+              name: store.editData.attachment.origName,
+              status: "done",
+              url: store.editData.attachment.url,
+            },
+          ]
+          : [],
+      });
     }
-    fetchData();
-  }, []);
-  // get the courses end
+  }, [store.openModal, store.editData, form]);
 
-  // check the edit data start
-  useEffect(() => {
-    if (openModal) {
-      if (data) {
-        form.setFieldsValue({
-          courseId: data.course?.id,
-          title: data.title,
-          attachment: data.attachment
-            ? [
-              {
-                uid: "-1",
-                name: data.attachment.origName,
-                status: "done",
-                url: data.attachment.url,
-              },
-            ]
-            : [],
-        });
-      } else {
-        form.resetFields();
-      }
-    }
-  }, [openModal, data, form]);
-  // check the edit data end
-
-
-  // handle form submit start
   const handleSubmit = async (values: CreateContractsType) => {
     try {
       store.setLoading(true);
-      let attachmentData = data?.attachment;
-      // file upload if the yes or catch the Notification
-      if (values.attachment && values.attachment[0].originFileObj) {
-        const res = await useUploadFileAttachment(values.attachment[0].originFileObj);
-        if (res.success) {
-          // save the attachmentData
-          attachmentData = {
-            size: res.data[0].size,
-            origName: res.data[0].fileName,
-            url: res.data[0].path,
-          };
+      let attachmentData = store.editData?.attachment;
+
+      if (file) {
+        const uploadedFile = await store.uploadFile(file);
+        if (uploadedFile) {
+          attachmentData = uploadedFile;
+        } else {
+          return;
         }
       }
-      // create or edit the contract data with attachment
+
       const contractData: ContractType = {
         title: values.title,
         courseId: values.courseId,
         attachment: attachmentData,
       };
-      try {
-        // check if data exists for edit and update or add contract or catch error
-        const contract = data ? await useEditContracts(data?.id as number, contractData) : await useCreateContracts(contractData);
-        if (contract.success) {
-          setData(null)
-          store.setRefresh(!store.refresh);
-          Notification("success", data ? "Shartnoma yangilandi" : "Shartnoma qo'shildi");
-        }
-        setOpenModal(false);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          if (err.response?.data?.error?.errId === 165) {
-            Notification("error", "Takrorlangan ma'lumot");
-            return;
-          }
-          Notification("error", data ? "Shartnomani yangilashda xatolik" : "Shartnoma qo'shishda xatolik");
-        }
-      }
-    } catch {
-      Notification("error", "Fayl yuklashda xatolik");
+      await store.addorEditContract(contractData, store.editData?.id);
+      handleCancelModal();
+    } catch (error) {
+      Notification("error", "Xatolik yuz berdi");
     } finally {
       store.setLoading(false);
     }
   };
-  // handle form submit end
-
-  // handle modal cancel
-  const handleCancelModal = (): void => {
-    setOpenModal(false);
-    setData(null);
-    form.resetFields();
-  };
 
   return (
     <Modal
-      title={data ? "Shartnoma o'zgartirish" : "Shartnoma yaratish"}
-      open={openModal}
-      footer={null}
+      title={store.editData ? "Shartnoma o'zgartirish" : "Shartnoma yaratish"}
+      open={store.openModal}
+      onOk={() => form.submit()}
+      onClose={handleCancelModal}
+      confirmLoading={store.loading}
+      okText={store.editData ? "O'zgartirish" : "Saqlash"}
+      cancelText="Bekor qilish"
       onCancel={handleCancelModal}
+      okButtonProps={submitBtnProps}
+      cancelButtonProps={cancelBtnProps}
     >
       <Form
         autoComplete="off"
@@ -148,15 +123,8 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
           label="Kurs"
           rules={[{ required: true, message: "Kurs tanlang" }]}
         >
-          <Select size="large" placeholder="Tanlang">
-            {courseStore.courses.map((course: CourseType) => (
-              <Select.Option key={course.id} value={course.id}>
-                {course.name}
-              </Select.Option>
-            ))}
-          </Select>
+          <Select options={courses} size="large" placeholder="Tanlang" />
         </Form.Item>
-
         <Form.Item
           name="title"
           label="Nomi"
@@ -173,13 +141,14 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
         <Form.Item
           name="attachment"
           valuePropName="fileList"
-          rules={[{ required: true, message: "Fayl yuklanishi kerak" }]}
           getValueFromEvent={normFile}
+          rules={[{ required: true, message: "Fayl yuklanishi kerak" }]}
         >
           <Upload
             maxCount={1}
             accept=".docx"
             beforeUpload={beforeUpload}
+            onChange={handleUploadChange}
           >
             <Button
               size="large"
@@ -191,27 +160,6 @@ const CustomModal: React.FC<ModalType> = ({ openModal, setOpenModal, data, setDa
               Fayl biriktiring
             </Button>
           </Upload>
-        </Form.Item>
-
-        <Form.Item>
-          <Space className="flex !justify-end">
-            <Button
-              onClick={handleCancelModal}
-              className="hover:!text-[#0EB182] hover:!border-[#0EB182]"
-              type="default"
-              htmlType="reset"
-            >
-              Bekor qilish
-            </Button>
-            <Button
-              loading={store.loading}
-              type="primary"
-              className="!bg-[#0EB182] hover:!bg-[#0EB182]/80"
-              htmlType="submit"
-            >
-              {data ? "O'zgartirish" : "Saqlash"}
-            </Button>
-          </Space>
         </Form.Item>
       </Form>
     </Modal>

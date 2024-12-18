@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useGetContracts } from "../hooks/useContracts";
+import { useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
 import CustomTable from "../components/CustomTable";
 import {
@@ -13,13 +12,11 @@ import { ContractType } from "../types";
 import { EditIcon, MoreIcon } from "../assets/images/icon";
 import SearchContracts from "../components/SearchContracts";
 import store from "../store/ContractsStore";
-import useDebounce from "../hooks/useDebounce";
 import CustomModal from "../components/CustomModal";
+import useDebounce from "../hooks/useDebounce";
 
 const Contracts = () => {
-  const [openModal, setOpenModal] = useState<boolean>(false);
-  const [editContract, setEditContract] = useState<ContractType | null>(null);
-  // pagination start
+
   const onShowSizeChange: PaginationProps["onShowSizeChange"] = (
     current,
     pageSize
@@ -30,56 +27,29 @@ const Contracts = () => {
       pageSize,
     });
   };
+
   const onChange: PaginationProps["onChange"] = (page) => {
     store.setPagination({
       ...store.pagination,
       current: page,
     });
   };
-  // pagination end
 
-  // edit contract
   const handleEdit = (data: ContractType) => {
-    setEditContract(data);
-    setOpenModal(true);
+    store.setEditData(data);
+    store.setOpenModal(true);
   };
 
-
-  // debounced value for search
-  const debouncedSearchValue = useDebounce(store.searchValue, 500);
-
-  //fetch all contracts
   useEffect(() => {
-    async function fetchData() {
-      try {
-        store.setLoading(true);
-        const res = await useGetContracts({
-          page: store.pagination.current,
-          perPage: store.pagination.pageSize,
-          search: debouncedSearchValue,
-        });
+    store.getCourses();
+  }, []);
 
-        store.setContracts(res.data.contracts);
-        store.setPagination({
-          ...store.pagination,
-          total: res.data.total as number,
-        });
-      } catch (err) {
-        console.log(err);
-      } finally {
-        store.setLoading(false);
-      }
-    }
-    fetchData();
-  }, [
-    store.pagination.current,
-    store.pagination.pageSize,
-    debouncedSearchValue,
-    store.refresh,
-  ]);
+  const debouncedSearchWaiting = useDebounce(store.searchValue, 700)
+  useEffect(() => {
+    store.getContracts(debouncedSearchWaiting);
+  }, [debouncedSearchWaiting, store.pagination.current, store.pagination.pageSize]);
 
-  // table columns
-  const columns: TableColumnsType<ContractType> = [
+  const columns: TableColumnsType<ContractType> = useMemo(() => [
     {
       title: "#",
       dataIndex: "id",
@@ -119,13 +89,13 @@ const Contracts = () => {
       ),
       className: "text-end",
     },
-  ];
+  ], []);
 
   return (
     <div className="p-6 ">
-      <SearchContracts setOpenModal={setOpenModal} />
+      <SearchContracts />
       <CustomTable
-        data={store.contracts}
+        data={store.data.contracts}
         columns={columns}
         loading={store.loading}
       />
@@ -135,14 +105,9 @@ const Contracts = () => {
         onShowSizeChange={onShowSizeChange}
         onChange={onChange}
         current={store.pagination.current}
-        total={store.pagination.total}
+        total={store.data.total}
       />
-      <CustomModal
-        setData={setEditContract }
-        data={editContract as ContractType}
-        openModal={openModal}
-        setOpenModal={setOpenModal}
-      />
+      {store.openModal && <CustomModal />}
     </div>
   );
 };

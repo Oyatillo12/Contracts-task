@@ -4,7 +4,7 @@ export type LoginType = {
 };
 
 export interface AttachmentType {
-  size: number ;
+  size: number;
   url: string;
   origName?: string;
 }
@@ -14,7 +14,7 @@ export interface ContractType {
   title: string;
   createdAt?: string
   courseId: number;
-  attachment?: AttachmentType
+  attachment?: AttachmentType;
   course?: CourseType;
 }
 
@@ -41,7 +41,17 @@ export interface responseData {
 }
 
 export interface CreateContractsType {
-  title:string;
+  title: string;
   courseId: number;
-  attachment: FileList ;
+  attachment: FileList;
+}
+
+export interface ResponseDataType {
+  total: number;
+  contracts: ContractType[];
+}
+
+export interface PaginationType {
+  current: number;
+  pageSize: number;
 }
