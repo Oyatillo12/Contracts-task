@@ -17,10 +17,7 @@ import useDebounce from "../hooks/useDebounce";
 
 const Contracts = () => {
 
-  const onShowSizeChange: PaginationProps["onShowSizeChange"] = (
-    current,
-    pageSize
-  ) => {
+  const onShowSizeChange: PaginationProps["onShowSizeChange"] = (current, pageSize) => {
     store.setPagination({
       ...store.pagination,
       current,
@@ -45,7 +42,7 @@ const Contracts = () => {
   }, []);
 
   const debouncedSearchWaiting = useDebounce(store.searchValue, 700);
-  
+
   useEffect(() => {
     store.getContracts(debouncedSearchWaiting);
   }, [debouncedSearchWaiting, store.pagination.current, store.pagination.pageSize]);

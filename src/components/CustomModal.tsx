@@ -9,15 +9,15 @@ import { UploadChangeParam } from "antd/es/upload";
 
 const CustomModal: React.FC = () => {
   const [form] = Form.useForm();
-  const submitBtnProps: ButtonProps = {
+  const submitBtnProps: ButtonProps = useMemo(() => ({
     htmlType: "submit",
     className: "!bg-[#0EB182] hover:!bg-[#0EB182]/80"
-  }
-  const cancelBtnProps: ButtonProps = {
+  }), []);
+  const cancelBtnProps: ButtonProps = useMemo(() => ({
     type: "default",
     htmlType: "reset",
     className: "!text-[#0EB182] hover:!border-[#0EB182]/80"
-  }
+  }), []);
   const courses = useMemo(() => {
     return store.courses.map((course: CourseType) => ({ label: course.name, value: course.id }));
   }, []);
@@ -42,7 +42,7 @@ const CustomModal: React.FC = () => {
     store.setOpenModal(false);
     store.setEditData(null);
     form.resetFields();
-  };
+  }
 
   useEffect(() => {
     if (store.editData) {
