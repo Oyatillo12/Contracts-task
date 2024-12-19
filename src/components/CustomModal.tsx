@@ -82,7 +82,7 @@ const CustomModal: React.FC = () => {
         courseId: values.courseId,
         attachment: attachmentData,
       };
-      await store.addorEditContract(contractData, store.editData?.id);
+      await store.addOrEditContract(contractData, store.editData?.id);
       handleCancelModal();
     } catch (error) {
       console.error(error);
