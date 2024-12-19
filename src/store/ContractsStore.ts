@@ -69,7 +69,7 @@ export class ContractsStore {
     }
   }
 
-  async addorEditContract(contractData: ContractType, contractId?: number): Promise<void> {
+  async addOrEditContract(contractData: ContractType, contractId?: number){
     try {
       let res;
       if (contractId) {
