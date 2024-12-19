@@ -1,8 +1,7 @@
 import RouterPages from "./router"
 
 function App() {
-
-  return <RouterPages/>
+  return <RouterPages />
 }
 
 export default App

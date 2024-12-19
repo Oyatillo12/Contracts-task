@@ -1,3 +1,5 @@
+import { UploadFile } from "antd";
+
 export type LoginType = {
   login?: string;
   password?: string;
@@ -43,7 +45,7 @@ export interface responseData {
 export interface CreateContractsType {
   title: string;
   courseId: number;
-  attachment: FileList;
+  attachment: UploadFile[];
 }
 
 export interface ResponseDataType {

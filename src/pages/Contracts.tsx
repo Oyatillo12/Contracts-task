@@ -44,7 +44,8 @@ const Contracts = () => {
     store.getCourses();
   }, []);
 
-  const debouncedSearchWaiting = useDebounce(store.searchValue, 700)
+  const debouncedSearchWaiting = useDebounce(store.searchValue, 700);
+  
   useEffect(() => {
     store.getContracts(debouncedSearchWaiting);
   }, [debouncedSearchWaiting, store.pagination.current, store.pagination.pageSize]);

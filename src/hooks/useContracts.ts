@@ -1,6 +1,5 @@
 import { useAxios } from "./useAxios";
-import { ContractType,  GetContractsParamsType } from "../types";
-import { UploadFile } from "antd";
+import { ContractType, GetContractsParamsType } from "../types";
 
 export const useGetContracts = async (params?: GetContractsParamsType) => {
   const res = await useAxios(true).get("/contracts/all", {
@@ -21,7 +20,7 @@ export const useCreateContracts = async (contract: ContractType) => {
   return res.data;
 };
 
-export const useUploadFileAttachment = async (file: UploadFile) => {
+export const useUploadFileAttachment = async (file: File) => {
   const res = await useAxios().post(
     "/upload/contract/attachment",
     {
@@ -37,7 +36,7 @@ export const useUploadFileAttachment = async (file: UploadFile) => {
 };
 
 
-export const useEditContracts = async (id:number,contract:ContractType) => {
+export const useEditContracts = async (id: number, contract: ContractType) => {
   const res = await useAxios().put(`/contracts/${id}`, contract);
   return res.data;
 }

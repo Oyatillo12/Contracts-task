@@ -2,7 +2,7 @@ import { makeAutoObservable } from "mobx";
 import { ContractType, CourseType, PaginationType, ResponseDataType } from "../types";
 import { useCreateContracts, useEditContracts, useGetContracts, useGetCourses, useUploadFileAttachment } from "../hooks/useContracts";
 import Notification from "../utils/Notification";
-import { UploadFile } from "antd";
+import axios, { AxiosError } from "axios";
 
 export class ContractsStore {
   data: ResponseDataType = {
@@ -50,7 +50,7 @@ export class ContractsStore {
     }
   }
 
-  async uploadFile(file: UploadFile) {
+  async uploadFile(file: File) {
     try {
       const res = await useUploadFileAttachment(file);
       if (res.success) {
@@ -82,7 +82,11 @@ export class ContractsStore {
         this.getContracts();
         Notification("success", contractId ? "Shartnoma yangilandi" : "Shartnoma qo'shildi");
       }
-    } catch (error) {
+    } catch (error: AxiosError | unknown) {
+      if (axios.isAxiosError(error) && error.response && error.response.data.error.errId == 165) {
+        Notification("error", "Shartnoma mavjud");
+        return;
+      }
       Notification("error", "Xatolik yuz berdi");
     }
   }

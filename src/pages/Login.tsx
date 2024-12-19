@@ -8,7 +8,7 @@ import Notification from "../utils/Notification";
 const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  
   const onFinish: FormProps<LoginType>["onFinish"] = async (values) => {
     try {
       setIsLoading(true);
@@ -23,27 +23,27 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-start gap-x-[80px]">
+    <div className="flex items-start md:gap-x-[80px] gap-x-10">
       <img
-        className="h-screen w-[50%] object-cover "
+        className="h-screen w-[50%] object-cover max-sm:hidden "
         src="/login-img.png"
         alt="Najot ta'lim img"
       />
-      <div className="pt-[60px]">
+      <div className="pt-[60px] max-w-full sm:max-w-[380px]  max-sm:p-4 w-full pr-4 max-sm:mt-6">
         <img
-          className="mb-[129px]"
+          className="sm:mb-[129px] mb-10 " 
           src="login-logo.svg"
           alt="logo icon"
           width={202}
           height={41}
         />
-        <h2 className="mb-8 text-[32px] leading-[48px] font-semibold">
+        <h2 className="mb-8 text-[32px] max-md:text-center leading-[48px] font-semibold">
           Tizimga kirish
         </h2>
         <Form
           onFinish={onFinish}
           layout="vertical"
-          className="w-[380px]"
+          className="w-full"
           autoComplete="off"
         >
           <Form.Item<LoginType>

@@ -1,15 +1,14 @@
 import { Button, ButtonProps, Form, Input, Modal, Select, Upload } from "antd";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { FileAddOutlined } from "../assets/images/icon";
 import { ContractType, CourseType, CreateContractsType, } from "../types";
 import Notification from "../utils/Notification";
 import store from "../store/ContractsStore";
 import { observer } from "mobx-react";
-import { UploadChangeParam, UploadFile } from "antd/es/upload";
+import { UploadChangeParam } from "antd/es/upload";
 
 const CustomModal: React.FC = () => {
   const [form] = Form.useForm();
-  const [file, setFile] = useState<UploadFile | null>(null);
   const submitBtnProps: ButtonProps = {
     htmlType: "submit",
     className: "!bg-[#0EB182] hover:!bg-[#0EB182]/80"
@@ -19,7 +18,6 @@ const CustomModal: React.FC = () => {
     htmlType: "reset",
     className: "!text-[#0EB182] hover:!border-[#0EB182]/80"
   }
-
   const courses = useMemo(() => {
     return store.courses.map((course: CourseType) => ({ label: course.name, value: course.id }));
   }, []);
@@ -29,12 +27,6 @@ const CustomModal: React.FC = () => {
       return e;
     }
     return e.fileList;
-  }
-
-  const handleUploadChange = (e: UploadChangeParam) => {
-    if (e.file) {
-      setFile(e.file);
-    }
   }
 
   const beforeUpload = (file: File): boolean | string => {
@@ -76,8 +68,8 @@ const CustomModal: React.FC = () => {
       store.setLoading(true);
       let attachmentData = store.editData?.attachment;
 
-      if (file) {
-        const uploadedFile = await store.uploadFile(file);
+      if (values.attachment[0].originFileObj) {
+        const uploadedFile = await store.uploadFile(values.attachment[0].originFileObj as File);
         if (uploadedFile) {
           attachmentData = uploadedFile;
         } else {
@@ -93,7 +85,7 @@ const CustomModal: React.FC = () => {
       await store.addorEditContract(contractData, store.editData?.id);
       handleCancelModal();
     } catch (error) {
-      Notification("error", "Xatolik yuz berdi");
+      console.error(error);
     } finally {
       store.setLoading(false);
     }
@@ -148,7 +140,6 @@ const CustomModal: React.FC = () => {
             maxCount={1}
             accept=".docx"
             beforeUpload={beforeUpload}
-            onChange={handleUploadChange}
           >
             <Button
               size="large"
